@@ -1,0 +1,223 @@
+/* ====== General Styles ====== */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: #f0f4f5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ====== Navbar ====== */
+.navbar {
+  width: 100%;
+  background-color:#004d40;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  color: #fff;
+  font-size: 1.4rem;
+    
+  text-decoration: none;
+}
+
+.nav-menu {
+  list-style: none;
+  display: flex;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-menu li a {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.nav-menu li a:hover {
+  text-decoration: underline;
+}
+
+/* Hamburger for small screens */
+.hamburger {
+  display: none;
+  font-size: 1.8rem;
+  color: white;
+  cursor: pointer;
+}
+
+.nav-toggle {
+  display: none;
+}
+
+@media screen and (max-width: 768px) {
+  .hamburger {
+    display: block;
+  }
+
+  .nav-menu {
+    flex-direction: column;
+    background-color: #004d40;
+    position: absolute;
+    top: 60px;
+    left: 0;
+    right: 0;
+    display: none;
+  }
+
+  .nav-toggle:checked + .hamburger + .nav-menu {
+    display: flex;
+  }
+
+  .nav-menu li {
+    padding: 10px 0;
+    text-align: center;
+  }
+}
+
+/* ====== Content Styles ====== */
+.container {
+  width: 100%;
+  max-width: 400px;
+  padding: 20px;
+  text-align: center;
+}
+
+.title {
+  color: #004d40;
+  margin: 30px 0 20px;
+  font-size: 22px;
+}
+
+/* ====== Card / Forms ====== */
+.card {
+  background: #fff;
+  border: 1px solid #e0f2f1;
+  border-radius: 10px;
+  padding: 25px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  margin-bottom: 25px;
+}
+
+.card input {
+  width: 90%;
+  padding: 10px;
+  margin: 8px 0;
+  font-size: 14px;
+  border: 1px solid #b2dfdb;
+  border-radius: 6px;
+}
+
+.card button {
+  width: 90%;
+  padding: 10px;
+  background-color: #00796b;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+.card button:hover {
+  background-color: #004d40;
+}
+
+/* Hide elements easily */
+.hidden {
+  display: none;
+}
+
+/* General Reset and Base Styles */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #e0f7fa, #ffffff);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px;
+  margin: 0;
+  min-height: 100vh;
+}
+
+/* Headings */
+h2 {
+  color: #00796b;
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+
+h3 {
+  color: #004d40;
+  margin-bottom: 10px;
+}
+
+/* Input Fields */
+input[type="text"],
+input[type="password"] {
+  width: 280px;
+  padding: 12px;
+  margin: 6px 0;
+  border: 1px solid #b2dfdb;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  font-size: 15px;
+}
+
+/* Buttons */
+button {
+  width: 280px;
+  padding: 12px;
+  background-color: #00796b;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  margin-top: 10px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #004d40;
+}
+
+/* Container Styles */
+#signup,
+#login,
+#user-info {
+  background-color: #ffffff;
+  border: 1px solid #e0f2f1;
+  border-radius: 12px;
+  padding: 25px 30px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 10px rgba(0, 121, 107, 0.1);
+  width: 320px;
+  text-align: center;
+}
+
+/* Responsive for smaller screens */
+@media (max-width: 400px) {
+  input, button {
+    width: 90%;
+  }
+
+  #signup, #login, #user-info {
+    width: 95%;
+    padding: 20px;
+  }
+}

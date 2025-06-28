@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Geospatial Visualization for Disaster Monitoring</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html, body {
+        font-family: Arial, sans-serif;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      nav, footer {
+        background-color: #004d40;
+        color: white;
+        padding: 1rem 2rem;
+        font-size: 1rem;
+      }
+
+      .nav-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1200px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      .nav-logo {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: bold;
+        text-decoration: none;
+      }
+
+      .nav-links {
+        display: flex;
+        list-style: none;
+      }
+
+      .nav-links li {
+        margin-left: 20px;
+      }
+
+      .nav-links a {
+        color: white;
+        text-decoration: none;
+        font-size: 1rem;
+        transition: color 0.3s;
+      }
+
+      .nav-links a:hover {
+        color: #aed581;
+      }
+
+      .container {
+        display: flex;
+        flex-grow: 1;
+        height: 100%;
+      }
+
+      #sidebar {
+        width: 400px;
+        background-color: #00796b;
+        padding: 20px;
+        color: white;
+        overflow-y: auto;
+      }
+
+      label, select, input, button {
+        display: block;
+        margin-top: 15px;
+        width: 100%;
+      }
+
+      select, input[type="email"], input[type="number"] {
+        padding: 8px;
+        border-radius: 4px;
+        border: none;
+        font-size: 14px;
+      }
+
+      button {
+        background-color: #004d40;
+        color: white;
+        padding: 10px;
+        font-size: 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+
+      #map-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #header {
+        padding: 15px 20px;
+        background: #f0f0f0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      #map {
+        flex-grow: 1;
+      }
+
+      .message {
+        margin-top: 20px;
+      }
+
+      .bbox-control label {
+        font-size: 0.9em;
+        font-weight: bold;
+      }
+
+      .legend {
+        background: white;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        line-height: 1.5;
+        margin-top: 20px;
+        color: black;
+        display: none; /* Initially hidden */
+      }
+
+      .legend i {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 2px solid #fff;
+        float: left;
+        margin-right: 8px;
+        opacity: 0.8;
+      }
+
+      .error {
+        color: yellow;
+        margin-top: 10px;
+        font-size: 0.9em;
+      }
+
+      .control-group {
+        margin-bottom: 15px;
+        display: none;
+      }
+
+      #disaster-controls {
+        margin-top: 20px;
+      }
+
+      .marker-cluster {
+        background-clip: padding-box;
+        border-radius: 50%;
+      }
+      .marker-cluster div {
+        width: 30px;
+        height: 30px;
+        margin-left: 5px;
+        margin-top: 5px;
+        text-align: center;
+        border-radius: 50%;
+        font: 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
+      }
+      .marker-cluster span {
+        line-height: 30px;
+      }
+      
+      /* Style for bounding box rectangle */
+      .bbox-rectangle {
+        stroke: #ff0000;
+        stroke-width: 2;
+        fill-opacity: 0.1;
+        fill: #ff0000;
+        pointer-events: none;
+      }
+      
+      /* Full extent button */
+      #fullExtentBtn {
+        display: none;
+        margin-top: 10px;
+      }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+      <div class="nav-container">
+        <a class="nav-logo" href="#">🌍 GeoMonitor</a>
+        <ul class="nav-links">
+          <li><a href="#">Home</a></li>
+          <li><a href="alerts.html">Alerts</a></li>
+          <li><a href="insight.html">Insight</a></li>
+          <li><a href="about.html">Docs</a></li>
+          <li><a href="index.html">Logout</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div id="sidebar"> 
+        <label for="event">Select Disaster Event</label>
+        <select id="event">
+          <option value="">--Select an event--</option>
+          <option value="Landslide">Landslide</option>
+          <option value="Earthquake">Earthquake</option>
+          <option value="Flood">Flood</option>
+          <option value="Fire">Fire</option>
+        </select>
+
+        <div id="disaster-controls">
+          <!-- Bounding Box Controls (Shared by all disaster types) -->
+          <div class="bbox-control">
+            <label for="south">South Latitude:</label>
+            <input type="number" id="south" step="0.000001" value="23.2">
+            <label for="west">West Longitude:</label>
+            <input type="number" id="west" step="0.000001" value="80.4">
+            <label for="north">North Latitude:</label>
+            <input type="number" id="north" step="0.000001" value="29.6">
+            <label for="east">East Longitude:</label>
+            <input type="number" id="east" step="0.000001" value="89.7">
+          </div>
+          <button id="updateBbox">Update Bounding Box</button>
+          <button id="fullExtentBtn">Full Extent View</button>
+
+          <!-- Landslide Controls -->
+          <div id="landslide-controls" class="control-group">
+            <button id="loadLandslideData">Load Landslide Data</button>
+          </div>
+
+          <!-- Flood Controls -->
+          <div id="flood-controls" class="control-group">
+            <button id="loadFloodData">Load Flood Data</button>
+          </div>
+
+          <!-- Earthquake Controls -->
+          <div id="earthquake-controls" class="control-group">
+            <label for="minMagnitude">Minimum Magnitude:</label>
+            <input type="number" id="minMagnitude" min="1" max="10" value="2" step="0.1">
+            <button id="loadEarthquakeData">Load Earthquake Data</button>
+          </div>
+
+          <!-- Fire Controls -->
+          <div id="fire-controls" class="control-group">
+            <button id="loadFireData">Load Fire Data</button>
+          </div>
+        </div>
+
+
+        <!-- Dynamic Legends -->
+        <div id="landslide-legend" class="legend">
+          <h4>Landslide Legend</h4>
+          <div><i style="background: #8B4513"></i> Landslide Area</div>
+          <div><i style="background: #A0522D"></i> Landslide Hazard</div>
+          <div><i style="background: #CD853F"></i> Natural Landslide</div>
+        </div>
+
+        <div id="flood-legend" class="legend">
+          <h4>Flood Legend</h4>
+          <div><i style="background: #1f78b4"></i> Flood Prone Area</div>
+          <div><i style="background: #e31a1c"></i> Flood Hazard</div>
+        </div>
+
+        <div id="earthquake-legend" class="legend">
+          <h4>Earthquake Legend</h4>
+          <div><i style="background: #ffeb3b"></i> Earthquake (2.0-3.9)</div>
+          <div><i style="background: #ff9800"></i> Earthquake (4.0-5.9)</div>
+          <div><i style="background: #e31a1c"></i> Earthquake (6.0+)</div>
+        </div>
+
+        <div id="fire-legend" class="legend">
+          <h4>Fire Legend</h4>
+          <div><i style="background: #ff6600"></i> Fire Hotspot</div>
+        </div>
+      </div>
+
+      <div id="map-container">
+        <div id="header">
+          <h1>Geospatial Visualization for Disaster Monitoring</h1>
+        </div>
+        <div id="map"></div>
+      </div>
+    </div>
+
+    <footer>
+      <center>© Pratistha Laxmi Poudel 2025</center>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script>
+      // Initialize map with base layers
+      const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors"
+      });
+
+      const satellite = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+        attribution: "© ESRI"
+      });
+
+      const carto = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+        attribution: "© CartoDB"
+      });
+
+      const map = L.map("map", {
+        center: [28.4, 84.1], // Center on Nepal
+        zoom: 7,
+        layers: [osm]
+      });
+
+      const baseMaps = {
+        "OpenStreetMap": osm,
+        "Satellite": satellite,
+        "Carto Light": carto
+      };
+
+      L.control.layers(baseMaps).addTo(map);
+
+      // Feature groups for each disaster type
+      const landslideLayer = L.featureGroup().addTo(map);
+      const floodLayer = L.featureGroup().addTo(map);
+      const earthquakeCluster = L.markerClusterGroup({
+        iconCreateFunction: function (cluster) {
+          return L.divIcon({
+            html: cluster.getChildCount(),
+            className: 'marker-cluster',
+            iconSize: L.point(40, 40)
+          });
+        }
+      }).addTo(map);
+      const fireLayer = L.featureGroup().addTo(map);
+      
+      // Rectangle for bounding box visualization
+      let bboxRectangle = null;
+
+      // Initialize with default bounding box
+      function initializeBbox() {
+        const south = parseFloat(document.getElementById("south").value);
+        const west = parseFloat(document.getElementById("west").value);
+        const north = parseFloat(document.getElementById("north").value);
+        const east = parseFloat(document.getElementById("east").value);
+        
+        updateBboxRectangle(south, west, north, east);
+        map.fitBounds([[south, west], [north, east]]);
+      }
+      
+      // Update the bounding box rectangle on the map
+      function updateBboxRectangle(south, west, north, east) {
+        const bounds = [[south, west], [north, east]];
+        
+        if (bboxRectangle) {
+          bboxRectangle.setBounds(bounds);
+        } else {
+          bboxRectangle = L.rectangle(bounds, {
+            className: 'bbox-rectangle'
+          }).addTo(map);
+        }
+      }
+
+      // Event listener for disaster type selection
+      document.getElementById("event").addEventListener("change", function() {
+        const selected = this.value;
+        
+        // Hide all control groups and legends
+        document.querySelectorAll('.control-group, .legend').forEach(el => {
+          el.style.display = 'none';
+        });
+        
+        // Show bounding box controls
+        document.querySelector('.bbox-control').style.display = 'block';
+        document.getElementById('updateBbox').style.display = 'block';
+        document.getElementById('fullExtentBtn').style.display = 'block';
+        
+        // Clear all layers except the bounding box
+        landslideLayer.clearLayers();
+        floodLayer.clearLayers();
+        earthquakeCluster.clearLayers();
+        fireLayer.clearLayers();
+        
+        // Show relevant controls and legend
+        if (selected === "Landslide") {
+          document.getElementById("landslide-controls").style.display = 'block';
+          document.getElementById("landslide-legend").style.display = 'block';
+        } else if (selected === "Flood") {
+          document.getElementById("flood-controls").style.display = 'block';
+          document.getElementById("flood-legend").style.display = 'block';
+        } else if (selected === "Earthquake") {
+          document.getElementById("earthquake-controls").style.display = 'block';
+          document.getElementById("earthquake-legend").style.display = 'block';
+        } else if (selected === "Fire") {
+          document.getElementById("fire-controls").style.display = 'block';
+          document.getElementById("fire-legend").style.display = 'block';
+        }
+      });
+
+      // Bounding box update function
+      document.getElementById("updateBbox").addEventListener("click", () => {
+        const south = parseFloat(document.getElementById("south").value);
+        const west = parseFloat(document.getElementById("west").value);
+        const north = parseFloat(document.getElementById("north").value);
+        const east = parseFloat(document.getElementById("east").value);
+        
+        updateBboxRectangle(south, west, north, east);
+        map.fitBounds([[south, west], [north, east]]);
+      });
+
+      // Full extent button
+      document.getElementById("fullExtentBtn").addEventListener("click", () => {
+        const selected = document.getElementById("event").value;
+        let bounds;
+        
+        if (selected === "Landslide" && landslideLayer.getLayers().length) {
+          bounds = landslideLayer.getBounds();
+        } else if (selected === "Flood" && floodLayer.getLayers().length) {
+          bounds = floodLayer.getBounds();
+        } else if (selected === "Earthquake" && earthquakeCluster.getLayers().length) {
+          bounds = earthquakeCluster.getBounds();
+        } else if (selected === "Fire" && fireLayer.getLayers().length) {
+          bounds = fireLayer.getBounds();
+        }
+        
+        if (bounds) {
+          map.fitBounds(bounds);
+        } else {
+          document.getElementById("message").innerHTML = `<span style='color: yellow'>No data loaded to zoom to.</span>`;
+        }
+      });
+
+      // Landslide functions
+      document.getElementById("loadLandslideData").addEventListener("click", loadLandslideData);
+
+      function loadLandslideData() {
+        landslideLayer.clearLayers();
+        const south = document.getElementById("south").value;
+        const west = document.getElementById("west").value;
+        const north = document.getElementById("north").value;
+        const east = document.getElementById("east").value;
+        const bbox = `${south},${west},${north},${east}`;
+        
+        const query = `[out:json];(way["landslide"="yes"](${bbox});relation["landslide"="yes"](${bbox});way["hazard"="landslide"](${bbox});relation["hazard"="landslide"](${bbox});way["natural"="landslide"](${bbox});relation["natural"="landslide"](${bbox}););out body;>;out skel qt;`;
+        
+        fetch("https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query))
+          .then(res => res.json())
+          .then(data => {
+            const nodes = new Map();
+            data.elements.forEach(el => el.type === "node" && nodes.set(el.id, el));
+            
+            data.elements.filter(el => el.type === "way").forEach(way => {
+              const coords = way.nodes.map(n => nodes.get(n)).filter(Boolean).map(n => [n.lat, n.lon]);
+              if (coords.length > 1) {
+                const isClosed = coords[0][0] === coords[coords.length-1][0] && coords[0][1] === coords[coords.length-1][1];
+                
+                let color = "#8B4513";
+                if (way.tags) {
+                  if (way.tags.hazard === "landslide") color = "#A0522D";
+                  if (way.tags.natural === "landslide") color = "#CD853F";
+                }
+                
+                const marker = isClosed ? 
+                  L.polygon(coords, {color: color, fillOpacity: 0.5}) :
+                  L.polyline(coords, {color: color, weight: 3});
+                
+                marker.bindPopup("Landslide Area").addTo(landslideLayer);
+              }
+            });
+            
+            if (landslideLayer.getLayers().length) {
+              map.fitBounds(landslideLayer.getBounds());
+              document.getElementById("message").innerHTML = `<span style='color: white'>Loaded ${landslideLayer.getLayers().length} landslide areas</span>`;
+            } else {
+              document.getElementById("message").innerHTML = `<span style='color: yellow'>No landslide data found for this area.</span>`;
+            }
+          })
+          .catch(error => {
+            document.getElementById("message").innerHTML = `<span style='color: yellow'>Error loading landslide data: ${error.message}</span>`;
+          });
+      }
+
+      // Flood functions
+      document.getElementById("loadFloodData").addEventListener("click", loadFloodData);
+
+      function loadFloodData() {
+        floodLayer.clearLayers();
+        const south = document.getElementById("south").value;
+        const west = document.getElementById("west").value;
+        const north = document.getElementById("north").value;
+        const east = document.getElementById("east").value;
+        const bbox = `${south},${west},${north},${east}`;
+        
+        const query = `[out:json];(way["flood_prone"="yes"](${bbox});relation["flood_prone"="yes"](${bbox});way["hazard"="flooding"](${bbox});relation["hazard"="flooding"](${bbox}););out body;>;out skel qt;`;
+        
+        fetch("https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query))
+          .then(res => res.json())
+          .then(data => {
+            const nodes = new Map();
+            data.elements.forEach(el => el.type === "node" && nodes.set(el.id, el));
+            
+            data.elements.filter(el => el.type === "way").forEach(way => {
+              const coords = way.nodes.map(n => nodes.get(n)).filter(Boolean).map(n => [n.lat, n.lon]);
+              if (coords.length > 1) {
+                const isClosed = coords[0][0] === coords[coords.length-1][0] && coords[0][1] === coords[coords.length-1][1];
+                
+                let color = "#1f78b4";
+                if (way.tags && way.tags.hazard === "flooding") color = "#e31a1c";
+                
+                const marker = isClosed ? 
+                  L.polygon(coords, {color: color, fillOpacity: 0.5}) :
+                  L.polyline(coords, {color: color, weight: 3});
+                
+                marker.bindPopup("Flood Area").addTo(floodLayer);
+              }
+            });
+            
+            if (floodLayer.getLayers().length) {
+              map.fitBounds(floodLayer.getBounds());
+              document.getElementById("message").innerHTML = `<span style='color: white'>Loaded ${floodLayer.getLayers().length} flood areas</span>`;
+            } else {
+              document.getElementById("message").innerHTML = `<span style='color: yellow'>No flood data found for this area.</span>`;
+            }
+          })
+          .catch(error => {
+            document.getElementById("message").innerHTML = `<span style='color: yellow'>Error loading flood data: ${error.message}</span>`;
+          });
+      }
+
+      // Earthquake functions
+      document.getElementById("loadEarthquakeData").addEventListener("click", loadEarthquakeData);
+
+      function loadEarthquakeData() {
+        earthquakeCluster.clearLayers();
+        const minMagnitude = document.getElementById("minMagnitude").value;
+        const south = document.getElementById("south").value;
+        const north = document.getElementById("north").value;
+        const west = document.getElementById("west").value;
+        const east = document.getElementById("east").value;
+        
+        fetch(`https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2025-01-01&minmagnitude=${minMagnitude}&minlatitude=${south}&maxlatitude=${north}&minlongitude=${west}&maxlongitude=${east}`)
+          .then(res => res.json())
+          .then(data => {
+            data.features.forEach(eq => {
+              const [lon, lat] = eq.geometry.coordinates;
+              const { mag, place, time, url } = eq.properties;
+              
+              let color = "#e31a1c";
+              if (mag < 4) color = "#ffeb3b";
+              else if (mag < 6) color = "#ff9800";
+              
+              const marker = L.circleMarker([lat, lon], {
+                radius: mag * 2,
+                fillColor: color,
+                color: "#000",
+                weight: 1,
+                fillOpacity: 0.8,
+              });
+
+              marker.bindPopup(`
+                <strong>${place}</strong><br>
+                <b>Magnitude:</b> ${mag}<br>
+                <b>Time:</b> ${new Date(time).toLocaleString()}<br>
+                <a href="${url}" target="_blank">Details</a>
+              `);
+              earthquakeCluster.addLayer(marker);
+            });
+            
+            if (earthquakeCluster.getLayers().length) {
+              map.fitBounds(earthquakeCluster.getBounds());
+              document.getElementById("message").innerHTML = `<span style='color: white'>Loaded ${earthquakeCluster.getLayers().length} earthquakes</span>`;
+            } else {
+              document.getElementById("message").innerHTML = `<span style='color: yellow'>No earthquake data found.</span>`;
+            }
+          })
+          .catch(error => {
+            document.getElementById("message").innerHTML = `<span style='color: yellow'>Error loading earthquake data: ${error.message}</span>`;
+          });
+      }
+
+      // Fire functions
+      document.getElementById("loadFireData").addEventListener("click", loadFireData);
+
+      function loadFireData() {
+        fireLayer.clearLayers();
+        const south = document.getElementById("south").value;
+        const north = document.getElementById("north").value;
+        const west = document.getElementById("west").value;
+        const east = document.getElementById("east").value;
+        
+        // Get current date in YYYY-MM-DD format
+        const today = new Date();
+        const dateString = today.toISOString().split('T')[0];
+        
+        // FIRMS API URL for VIIRS SNPP NRT data
+        const apiKey = "efcbcbca9e86adfc26d943b9bd52ad6f"; // Replace with your actual API key
+        const source = "VIIRS_SNPP_NRT";
+        const area = "world";
+        const days = "1"; // Last 1 day
+        
+        const fireURL = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${apiKey}/${source}/${area}/${days}/${dateString}`;
+        
+        fetch(fireURL)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.text();
+          })
+          .then(text => {
+            const lines = text.trim().split("\n").slice(1); // Skip header
+            let fireCount = 0;
+            
+            lines.forEach(row => {
+              const cols = row.split(",");
+              const lat = parseFloat(cols[0]);
+              const lon = parseFloat(cols[1]);
+              
+              // Check if within bounding box
+              if (lat >= south && lat <= north && lon >= west && lon <= east) {
+                fireCount++;
+                
+                const marker = L.circleMarker([lat, lon], {
+                  radius: 5,
+                  fillColor: "#ff6600",
+                  color: "#000",
+                  weight: 1,
+                  fillOpacity: 0.8,
+                });
+
+                marker.bindPopup(`
+                  <strong>Fire Hotspot</strong><br>
+                  <b>Date:</b> ${cols[5]}<br>
+                  <b>Time:</b> ${cols[6]}<br>
+                  <b>Location:</b> ${lat.toFixed(2)}, ${lon.toFixed(2)}
+                `).addTo(fireLayer);
+              }
+            });
+            
+            if (fireCount > 0) {
+              map.fitBounds(fireLayer.getBounds());
+              document.getElementById("message").innerHTML = `<span style='color: white'>Loaded ${fireCount} fire hotspots</span>`;
+            } else {
+              document.getElementById("message").innerHTML = `<span style='color: yellow'>No fire data found in this area.</span>`;
+            }
+          })
+          .catch(error => {
+            console.error("Error loading fire data:", error);
+            document.getElementById("message").innerHTML = `<span style='color: yellow'>Error loading fire data: ${error.message}</span>`;
+          });
+      }
+
+     
+      // Initialize the bounding box when page loads
+      window.addEventListener('load', initializeBbox);
+    </script>
+</body>
+</html>

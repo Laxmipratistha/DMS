@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GeoMonitor - Alert Subscription</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html, body {
+        font-family: Arial, sans-serif;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      nav, footer {
+        background-color: #004d40;
+        color: white;
+        padding: 1rem 2rem;
+        font-size: 1rem;
+      }
+
+      .nav-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1200px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      .nav-logo {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: bold;
+        text-decoration: none;
+      }
+
+      .nav-links {
+        display: flex;
+        list-style: none;
+      }
+
+      .nav-links li {
+        margin-left: 20px;
+      }
+
+      .nav-links a {
+        color: white;
+        text-decoration: none;
+        font-size: 1rem;
+        transition: color 0.3s;
+      }
+
+      .nav-links a:hover {
+        color: #aed581;
+      }
+
+      .container {
+        display: flex;
+        flex-grow: 1;
+        height: 100%;
+      }
+
+      #sidebar {
+        width: 400px;
+        background-color: #00796b;
+        padding: 20px;
+        color: white;
+        overflow-y: auto;
+      }
+
+      label, select, input, button {
+        display: block;
+        margin-top: 15px;
+        width: 100%;
+      }
+
+      select, input[type="email"], input[type="number"] {
+        padding: 8px;
+        border-radius: 4px;
+        border: none;
+        font-size: 14px;
+      }
+
+      button {
+        background-color: #004d40;
+        color: white;
+        padding: 10px;
+        font-size: 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+
+      #map-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #header {
+        padding: 15px 20px;
+        background: #f0f0f0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      #map {
+        flex-grow: 1;
+      }
+
+      .message {
+        margin-top: 20px;
+      }
+
+      .error {
+        color: yellow;
+        margin-top: 10px;
+        font-size: 0.9em;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      .location-controls {
+        margin-top: 20px;
+      }
+
+      .radius-control {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .radius-control input {
+        flex: 1;
+      }
+
+      .radius-value {
+        min-width: 40px;
+        text-align: center;
+      }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+      <div class="nav-container">
+        <a class="nav-logo" href="#">🌍 GeoMonitor</a>
+        <ul class="nav-links">
+          <li><a href="home.html">Home</a></li>
+          <li><a href="alerts.html">Alerts</a></li>
+          <li><a href="insight.html">Insight</a></li>
+          <li><a href="documentation.html">Docs</a></li>
+          <li><a href="index.html">Login</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div id="sidebar"> 
+        <h2>Alert Subscription</h2>
+        
+        <div class="form-group">
+          <label for="email">Email Address:</label>
+          <input type="email" id="email" placeholder="your@email.com" required>
+        </div>
+
+        <div class="form-group">
+          <label for="disasterType">Disaster Type:</label>
+          <select id="disasterType">
+            <option value="all">All Disasters</option>
+            <option value="earthquake">Earthquakes</option>
+            <option value="flood">Floods</option>
+            <option value="landslide">Landslides</option>
+            <option value="fire">Fires</option>
+          </select>
+        </div>
+
+        <div class="location-controls">
+          <label>Set Your Location:</label>
+          <div class="form-group">
+            <button id="useCurrentLocation">Use Current Location</button>
+            <span id="locationStatus">Location not set</span>
+          </div>
+
+          <div class="form-group">
+            <label for="alertRadius">Alert Radius (km):</label>
+            <div class="radius-control">
+              <input type="range" id="alertRadius" min="1" max="100" value="20">
+              <span id="radiusValue" class="radius-value">20</span>
+            </div>
+          </div>
+        </div>
+
+        <button id="subscribeBtn">Subscribe to Alerts</button>
+        <div class="message" id="message"></div>
+      </div>
+
+      <div id="map-container">
+        <div id="header">
+          <h1>Alert Coverage Area</h1>
+        </div>
+        <div id="map"></div>
+      </div>
+    </div>
+
+    <footer>
+      <center>© Pratistha Laxmi Poudel 2025</center>
+    </footer>
+
+    <!-- Firebase and Map Libraries -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+      // Initialize Firebase
+      const firebaseConfig = {
+        apiKey:"AIzaSyAdnu31U1m54AspTINDR2SpR7wzfrlZlUc",
+        authDomain: "geospatial-25b20.firebaseapp.com",
+        projectId: "geospatial-25b20",
+        storageBucket: "geospatial-25b20.appspot.com",
+        messagingSenderId: "1:75407395979:web:0472c479fb290ffecfd88e",
+        appId: "YOUR_APP_ID"
+      };
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+
+      // Initialize Map
+      const map = L.map('map').setView([28.4, 84.1], 7);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+      // User location variables
+      let userLocation = null;
+      let radiusCircle = null;
+      const radiusInput = document.getElementById('alertRadius');
+      const radiusValue = document.getElementById('radiusValue');
+
+      // Update radius display
+      radiusInput.addEventListener('input', function() {
+        radiusValue.textContent = this.value;
+        if (userLocation) {
+          updateRadiusCircle();
+        }
+      });
+
+      // Get current location
+      document.getElementById('useCurrentLocation').addEventListener('click', function() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            function(position) {
+              userLocation = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+              };
+              document.getElementById('locationStatus').textContent = "Location set";
+              updateRadiusCircle();
+              map.setView([userLocation.lat, userLocation.lng], 12);
+            },
+            function(error) {
+              document.getElementById('message').innerHTML = 
+                `<span class="error">Error getting location: ${error.message}</span>`;
+            }
+          );
+        } else {
+          document.getElementById('message').innerHTML = 
+            '<span class="error">Geolocation is not supported by this browser</span>';
+        }
+      });
+
+      // Update the radius circle on map
+      function updateRadiusCircle() {
+        const radiusKm = parseInt(radiusInput.value);
+        
+        if (radiusCircle) {
+          map.removeLayer(radiusCircle);
+        }
+        
+        radiusCircle = L.circle([userLocation.lat, userLocation.lng], {
+          color: '#ff0000',
+          fillColor: '#f03',
+          fillOpacity: 0.2,
+          radius: radiusKm * 1000
+        }).addTo(map);
+      }
+
+      // Handle subscription
+      document.getElementById('subscribeBtn').addEventListener('click', function() {
+        const email = document.getElementById('email').value;
+        const disasterType = document.getElementById('disasterType').value;
+        const radiusKm = parseInt(radiusInput.value);
+        
+        if (!email) {
+          document.getElementById('message').innerHTML = 
+            '<span class="error">Please enter your email address</span>';
+          return;
+        }
+        
+        if (!userLocation) {
+          document.getElementById('message').innerHTML = 
+            '<span class="error">Please set your location</span>';
+          return;
+        }
+        
+        // Save subscription to Firestore
+        db.collection('alertSubscriptions').add({
+          email: email,
+          disasterType: disasterType,
+          location: new firebase.firestore.GeoPoint(userLocation.lat, userLocation.lng),
+          radiusKm: radiusKm,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        })
+        .then(() => {
+          document.getElementById('message').innerHTML = 
+            '<span style="color: white">Successfully subscribed to alerts!</span>';
+        })
+        .catch(error => {
+          document.getElementById('message').innerHTML = 
+            `<span class="error">Subscription failed: ${error.message}</span>`;
+        });
+      });
+    </script>
+</body>
+</html>

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GeoMonitor Documentation</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html, body {
+        font-family: Arial, sans-serif;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      nav, footer {
+        background-color: #004d40;
+        color: white;
+        padding: 1rem 2rem;
+        font-size: 1rem;
+      }
+
+      .nav-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1200px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      .nav-logo {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: bold;
+        text-decoration: none;
+      }
+
+      .nav-links {
+        display: flex;
+        list-style: none;
+      }
+
+      .nav-links li {
+        margin-left: 20px;
+      }
+
+      .nav-links a {
+        color: white;
+        text-decoration: none;
+        font-size: 1rem;
+        transition: color 0.3s;
+      }
+
+      .nav-links a:hover {
+        color: #aed581;
+      }
+
+      .container {
+        flex-grow: 1;
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      h1, h2, h3 {
+        color: #004d40;
+        margin: 20px 0 10px;
+      }
+
+      h1 { font-size: 2rem; }
+      h2 { font-size: 1.5rem; }
+      h3 { font-size: 1.2rem; }
+
+      .doc-section {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+
+      .code-block {
+        background: #f5f5f5;
+        padding: 15px;
+        border-radius: 5px;
+        font-family: monospace;
+        overflow-x: auto;
+        margin: 10px 0;
+      }
+
+      .step {
+        margin-bottom: 15px;
+        padding-left: 15px;
+        border-left: 3px solid #00796b;
+      }
+
+      .note {
+        background: #e3f2fd;
+        padding: 10px;
+        border-radius: 5px;
+        border-left: 4px solid #2196f3;
+        margin: 10px 0;
+      }
+
+      .warning {
+        background: #ffebee;
+        padding: 10px;
+        border-radius: 5px;
+        border-left: 4px solid #f44336;
+        margin: 10px 0;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 15px 0;
+      }
+
+      table, th, td {
+        border: 1px solid #ddd;
+      }
+
+      th, td {
+        padding: 10px;
+        text-align: left;
+      }
+
+      th {
+        background-color: #e0f2f1;
+      }
+
+      .legend-sample {
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        margin-right: 8px;
+        border: 2px solid white;
+      }
+
+      .feature-list {
+        columns: 2;
+        column-gap: 20px;
+      }
+
+      .feature-list li {
+        margin-bottom: 8px;
+        break-inside: avoid;
+      }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+      <div class="nav-container">
+        <a class="nav-logo" href="#">🌍 GeoMonitor</a>
+        <ul class="nav-links">
+          <li><a href="home.html">Home</a></li>
+          <li><a href="alerts.html">Alerts</a></li>
+          <li><a href="insight.html">Insight</a></li>
+          <li><a href="about.html">Docs</a></li>
+          <li><a href="index.html">Logout</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="container">
+      <h1>GeoMonitor Technical Documentation</h1>
+      
+      <div class="doc-section">
+        <h2>1. System Overview</h2>
+        <p>GeoMonitor is a comprehensive geo-disaster monitoring system that provides:</p>
+        <ul class="feature-list">
+          <li>Real-time disaster visualization (Floods, Landslides, Fires, Earthquakes)</li>
+          <li>Interactive map with multiple base layers</li>
+          <li>Bounding box selection for regional analysis</li>
+          <li>Statistical insights with dynamic charts</li>
+          <li>User authentication and alert subscriptions</li>
+          <li>Responsive design for all devices</li>
+          <li>API integration with multiple data sources</li>
+        </ul>
+      </div>
+
+      <div class="doc-section">
+        <h2>2. Authentication System (Firebase)</h2>
+        <div class="step">
+          <h3>2.1 Firebase Configuration</h3>
+          <div class="code-block">
+// Firebase configuration (from login.html)
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "your-project.firebaseapp.com",
+  projectId: "your-project-id",
+  storageBucket: "your-project.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+          </div>
+        </div>
+
+        <div class="step">
+          <h3>2.2 Login Implementation</h3>
+          <div class="code-block">
+// Login form handler
+document.getElementById('loginForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  
+  firebase.auth().signInWithEmailAndPassword(email, password)
+    .then(() => window.location.href = 'dashboard.html')
+    .catch(error => document.getElementById('error').textContent = error.message);
+});
+          </div>
+        </div>
+      </div>
+
+      <div class="doc-section">
+        <h2>3. Disaster Mapping System</h2>
+        
+        <div class="step">
+          <h3>3.1 Map Initialization</h3>
+          <div class="code-block">
+// Leaflet map setup (from index.html)
+const map = L.map('map', {
+  center: [28.4, 84.1], // Center on Nepal
+  zoom: 7,
+  layers: [osm]
+});
+
+// Base layers
+const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
+const satellite = L.tileLayer("...");
+const carto = L.tileLayer("...");
+
+// Layer control
+L.control.layers({
+  "OpenStreetMap": osm,
+  "Satellite": satellite,
+  "Carto Light": carto
+}).addTo(map);
+          </div>
+        </div>
+
+        <div class="step">
+          <h3>3.2 Disaster Layers</h3>
+          <p>Four feature groups for different disaster types:</p>
+          <div class="code-block">
+const landslideLayer = L.featureGroup().addTo(map);
+const floodLayer = L.featureGroup().addTo(map);
+const earthquakeCluster = L.markerClusterGroup().addTo(map);
+const fireLayer = L.featureGroup().addTo(map);
+          </div>
+
+          <h4>Color Legend:</h4>
+          <ul>
+            <li><span class="legend-sample" style="background:#8B4513"></span> Landslide Area</li>
+            <li><span class="legend-sample" style="background:#1f78b4"></span> Flood Prone Area</li>
+            <li><span class="legend-sample" style="background:#ff6600"></span> Fire Hotspot</li>
+            <li><span class="legend-sample" style="background:#ff9800"></span> Earthquake (4.0-5.9)</li>
+          </ul>
+        </div>
+
+        <div class="step">
+          <h3>3.3 Data Loading Examples</h3>
+          
+          <h4>Landslide Data (Overpass API)</h4>
+          <div class="code-block">
+function loadLandslideData() {
+  const bbox = `${south},${west},${north},${east}`;
+  const query = `[out:json];(way["landslide"="yes"](${bbox});...`;
+  
+  fetch("https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query))
+    .then(res => res.json())
+    .then(data => {
+      // Process and display data on map
+    });
+}
+          </div>
+
+          <h4>Earthquake Data (USGS API)</h4>
+          <div class="code-block">
+function loadEarthquakeData() {
+  fetch(`https://earthquake.usgs.gov/...&minlatitude=${south}&maxlatitude=${north}...`)
+    .then(res => res.json())
+    .then(data => {
+      // Create circle markers for each earthquake
+    });
+}
+          </div>
+        </div>
+      </div>
+
+      <div class="doc-section">
+        <h2>4. Insight Dashboard</h2>
+        
+        <div class="step">
+          <h3>4.1 Chart Implementation</h3>
+          <div class="code-block">
+// Chart.js setup (from insight.html)
+const pieChart = new Chart(document.getElementById('pieChart'), {
+  type: 'pie',
+  data: {
+    labels: ['Flood', 'Landslide', 'Fire', 'Earthquake'],
+    datasets: [{
+      data: [floodCount, landslideCount, fireCount, eqCount],
+      backgroundColor: ['#1f78b4', '#8B4513', '#ff6600', '#ff9800']
+    }]
+  }
+});
+          </div>
+        </div>
+
+        <div class="step">
+          <h3>4.2 Data Aggregation</h3>
+          <p>Combines data from multiple APIs:</p>
+          <ul>
+            <li>Overpass API for Floods and Landslides</li>
+            <li>NASA FIRMS for Fire data</li>
+            <li>USGS for Earthquake data</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="doc-section">
+        <h2>5. API Reference</h2>
+        <table>
+          <tr>
+            <th>API</th>
+            <th>Purpose</th>
+            <th>Endpoint</th>
+          </tr>
+          <tr>
+            <td>Overpass API</td>
+            <td>Flood/Landslide data</td>
+            <td>https://overpass-api.de/api/interpreter</td>
+          </tr>
+          <tr>
+            <td>USGS Earthquake</td>
+            <td>Seismic activity</td>
+            <td>https://earthquake.usgs.gov/fdsnws/event/1/</td>
+          </tr>
+          <tr>
+            <td>NASA FIRMS</td>
+            <td>Fire hotspots</td>
+            <td>https://firms.modaps.eosdis.nasa.gov/api/</td>
+          </tr>
+          <tr>
+            <td>Firebase Auth</td>
+            <td>User authentication</td>
+            <td>https://www.gstatic.com/firebasejs/</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="doc-section">
+        <h2>6. Deployment Guide</h2>
+        <div class="step">
+          <h3>6.1 Requirements</h3>
+          <ul>
+            <li>Web server (Apache, Nginx, or GitHub Pages)</li>
+            <li>Firebase project with authentication enabled</li>
+            <li>API keys for all services</li>
+          </ul>
+        </div>
+
+        <div class="step">
+          <h3>6.2 Configuration Steps</h3>
+          <ol>
+            <li>Set up Firebase project and enable Email/Password auth</li>
+            <li>Replace placeholder API keys in all HTML files</li>
+            <li>Configure CORS policies if hosting on different domains</li>
+            <li>Test all functionality before production deployment</li>
+          </ol>
+        </div>
+
+        <div class="warning">
+          <strong>Important:</strong> Never commit actual API keys to version control. 
+          Use environment variables or a configuration service in production.
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <center>© Pratistha Laxmi Poudel 2025</center>
+    </footer>
+</body>
+</html>
