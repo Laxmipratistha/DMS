@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Geospatial Visualization for Disaster Monitoring</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
     <style>
       * {
         margin: 0;
@@ -12,14 +15,16 @@
         box-sizing: border-box;
       }
 
-      html, body {
+      html,
+      body {
         font-family: Arial, sans-serif;
         height: 100vh;
         display: flex;
         flex-direction: column;
       }
 
-      nav, footer {
+      nav,
+      footer {
         background-color: #004d40;
         color: white;
         padding: 1rem 2rem;
@@ -76,13 +81,18 @@
         overflow-y: auto;
       }
 
-      label, select, input, button {
+      label,
+      select,
+      input,
+      button {
         display: block;
         margin-top: 15px;
         width: 100%;
       }
 
-      select, input[type="email"], input[type="number"] {
+      select,
+      input[type="email"],
+      input[type="number"] {
         padding: 8px;
         border-radius: 4px;
         border: none;
@@ -129,7 +139,7 @@
         background: white;
         padding: 10px;
         border-radius: 5px;
-        box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
         line-height: 1.5;
         margin-top: 20px;
         color: black;
@@ -177,7 +187,7 @@
       .marker-cluster span {
         line-height: 30px;
       }
-      
+
       /* Style for bounding box rectangle */
       .bbox-rectangle {
         stroke: #ff0000;
@@ -186,15 +196,21 @@
         fill: #ff0000;
         pointer-events: none;
       }
-      
+
       /* Full extent button */
       #fullExtentBtn {
         display: none;
         margin-top: 10px;
       }
+      .leaflet-control-layers {
+        background: white;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <nav class="navbar">
       <div class="nav-container">
         <a class="nav-logo" href="#">🌍 GeoMonitor</a>
@@ -209,7 +225,7 @@
     </nav>
 
     <div class="container">
-      <div id="sidebar"> 
+      <div id="sidebar">
         <label for="event">Select Disaster Event</label>
         <select id="event">
           <option value="">--Select an event--</option>
@@ -223,13 +239,13 @@
           <!-- Bounding Box Controls (Shared by all disaster types) -->
           <div class="bbox-control">
             <label for="south">South Latitude:</label>
-            <input type="number" id="south" step="0.000001" value="23.2">
+            <input type="number" id="south" step="0.000001" value="23.2" />
             <label for="west">West Longitude:</label>
-            <input type="number" id="west" step="0.000001" value="80.4">
+            <input type="number" id="west" step="0.000001" value="80.4" />
             <label for="north">North Latitude:</label>
-            <input type="number" id="north" step="0.000001" value="29.6">
+            <input type="number" id="north" step="0.000001" value="29.6" />
             <label for="east">East Longitude:</label>
-            <input type="number" id="east" step="0.000001" value="89.7">
+            <input type="number" id="east" step="0.000001" value="89.7" />
           </div>
           <button id="updateBbox">Update Bounding Box</button>
           <button id="fullExtentBtn">Full Extent View</button>
@@ -247,7 +263,14 @@
           <!-- Earthquake Controls -->
           <div id="earthquake-controls" class="control-group">
             <label for="minMagnitude">Minimum Magnitude:</label>
-            <input type="number" id="minMagnitude" min="1" max="10" value="2" step="0.1">
+            <input
+              type="number"
+              id="minMagnitude"
+              min="1"
+              max="10"
+              value="2"
+              step="0.1"
+            />
             <button id="loadEarthquakeData">Load Earthquake Data</button>
           </div>
 
@@ -257,13 +280,12 @@
           </div>
         </div>
 
-
         <!-- Dynamic Legends -->
         <div id="landslide-legend" class="legend">
           <h4>Landslide Legend</h4>
-          <div><i style="background: #8B4513"></i> Landslide Area</div>
-          <div><i style="background: #A0522D"></i> Landslide Hazard</div>
-          <div><i style="background: #CD853F"></i> Natural Landslide</div>
+          <div><i style="background: #8b4513"></i> Landslide Area</div>
+          <div><i style="background: #a0522d"></i> Landslide Hazard</div>
+          <div><i style="background: #cd853f"></i> Natural Landslide</div>
         </div>
 
         <div id="flood-legend" class="legend">
@@ -283,6 +305,13 @@
           <h4>Fire Legend</h4>
           <div><i style="background: #ff6600"></i> Fire Hotspot</div>
         </div>
+
+        <div id="boundary-legend" class="legend">
+          <h4>Boundary Legend</h4>
+          <div><i style="background: #000000"></i> Nepal Boundary</div>
+          <div><i style="background: #ff0000"></i> Province Boundary</div>
+          <div><i style="background: #0000ff"></i> District Boundary</div>
+        </div>
       </div>
 
       <div id="map-container">
@@ -301,31 +330,149 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <script>
       // Initialize map with base layers
-      const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "© OpenStreetMap contributors"
-      });
+      const osm = L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+          attribution: "© OpenStreetMap contributors",
+        }
+      );
 
-      const satellite = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
-        attribution: "© ESRI"
-      });
+      const satellite = L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        {
+          attribution: "© ESRI",
+        }
+      );
 
-      const carto = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-        attribution: "© CartoDB"
-      });
+      const carto = L.tileLayer(
+        "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+        {
+          attribution: "© CartoDB",
+        }
+      );
 
+      // Create the map with OSM as default base layer (no overlays by default)
       const map = L.map("map", {
         center: [28.4, 84.1], // Center on Nepal
         zoom: 7,
-        layers: [osm]
+        layers: [osm], // Only base layer by default
       });
 
+      // Create boundary layers (not added to map by default)
+      const nepalBoundary = L.layerGroup();
+      const provincesLayer = L.layerGroup();
+      const districtsLayer = L.layerGroup();
+
+      // Style functions for boundaries
+      function countryStyle() {
+        return {
+          color: "#000000",
+          weight: 3,
+          opacity: 1,
+          fillOpacity: 0.1,
+          fillColor: "#555555",
+        };
+      }
+
+      function provinceStyle() {
+        return {
+          color: "#FF0000",
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 0.1,
+          fillColor: "#FFAAAA",
+        };
+      }
+
+      function districtStyle() {
+        return {
+          color: "#0000FF",
+          weight: 1,
+          opacity: 1,
+          dashArray: "3",
+          fillOpacity: 0.05,
+          fillColor: "#AAAAFF",
+        };
+      }
+
+      // Define base layers and overlay layers
       const baseMaps = {
-        "OpenStreetMap": osm,
-        "Satellite": satellite,
-        "Carto Light": carto
+        OpenStreetMap: osm,
+        Satellite: satellite,
+        "Carto Light": carto,
       };
 
-      L.control.layers(baseMaps).addTo(map);
+      const overlayMaps = {
+        "<span style='color: #000000; font-weight: bold'>Nepal Boundary</span>":
+          nepalBoundary,
+        "<span style='color: #FF0000; font-weight: bold'>Provinces</span>":
+          provincesLayer,
+        "<span style='color: #0000FF; font-weight: bold'>Districts</span>":
+          districtsLayer,
+      };
+
+      // Add layer control to the map with all options
+      L.control
+        .layers(baseMaps, overlayMaps, {
+          collapsed: true, // Make it collapsed by default
+          position: "topright",
+        })
+        .addTo(map);
+
+      // Load boundary data
+      function loadBoundaryData() {
+        // Load Nepal boundary (replace with your actual GeoJSON file)
+        fetch("nepal.geojson")
+          .then((response) => response.json())
+          .then((data) => {
+            L.geoJSON(data, {
+              style: countryStyle,
+              onEachFeature: function (feature, layer) {
+                layer.bindPopup("<b>Nepal</b>");
+              },
+            }).addTo(nepalBoundary);
+          })
+          .catch((error) =>
+            console.error("Error loading Nepal boundary:", error)
+          );
+
+        // Load provinces (replace with your actual GeoJSON file)
+        fetch("province.json")
+          .then((response) => response.json())
+          .then((data) => {
+            L.geoJSON(data, {
+              style: provinceStyle,
+              onEachFeature: function (feature, layer) {
+                if (feature.properties && feature.properties.NAME) {
+                  layer.bindPopup(
+                    "<b>Province:</b> " + feature.properties.NAME
+                  );
+                }
+              },
+            }).addTo(provincesLayer);
+          })
+          .catch((error) => console.error("Error loading provinces:", error));
+
+        // Load districts (replace with your actual GeoJSON file)
+        fetch("districts.json")
+          .then((response) => response.json())
+          .then((data) => {
+            L.geoJSON(data, {
+              style: districtStyle,
+              onEachFeature: function (feature, layer) {
+                if (feature.properties && feature.properties.DISTRICT) {
+                  layer.bindPopup(
+                    "<b>District:</b> " + feature.properties.DISTRICT
+                  );
+                }
+              },
+            }).addTo(districtsLayer);
+          })
+          .catch((error) => console.error("Error loading districts:", error));
+      }
+
+      // Call the function to load boundary data
+      loadBoundaryData();
 
       // Feature groups for each disaster type
       const landslideLayer = L.featureGroup().addTo(map);
@@ -334,13 +481,13 @@
         iconCreateFunction: function (cluster) {
           return L.divIcon({
             html: cluster.getChildCount(),
-            className: 'marker-cluster',
-            iconSize: L.point(40, 40)
+            className: "marker-cluster",
+            iconSize: L.point(40, 40),
           });
-        }
+        },
       }).addTo(map);
       const fireLayer = L.featureGroup().addTo(map);
-      
+
       // Rectangle for bounding box visualization
       let bboxRectangle = null;
 
@@ -350,58 +497,68 @@
         const west = parseFloat(document.getElementById("west").value);
         const north = parseFloat(document.getElementById("north").value);
         const east = parseFloat(document.getElementById("east").value);
-        
+
         updateBboxRectangle(south, west, north, east);
-        map.fitBounds([[south, west], [north, east]]);
+        map.fitBounds([
+          [south, west],
+          [north, east],
+        ]);
       }
-      
+
       // Update the bounding box rectangle on the map
       function updateBboxRectangle(south, west, north, east) {
-        const bounds = [[south, west], [north, east]];
-        
+        const bounds = [
+          [south, west],
+          [north, east],
+        ];
+
         if (bboxRectangle) {
           bboxRectangle.setBounds(bounds);
         } else {
           bboxRectangle = L.rectangle(bounds, {
-            className: 'bbox-rectangle'
+            className: "bbox-rectangle",
           }).addTo(map);
         }
       }
 
       // Event listener for disaster type selection
-      document.getElementById("event").addEventListener("change", function() {
+      document.getElementById("event").addEventListener("change", function () {
         const selected = this.value;
-        
+
         // Hide all control groups and legends
-        document.querySelectorAll('.control-group, .legend').forEach(el => {
-          el.style.display = 'none';
+        document.querySelectorAll(".control-group, .legend").forEach((el) => {
+          el.style.display = "none";
         });
-        
+
         // Show bounding box controls
-        document.querySelector('.bbox-control').style.display = 'block';
-        document.getElementById('updateBbox').style.display = 'block';
-        document.getElementById('fullExtentBtn').style.display = 'block';
-        
+        document.querySelector(".bbox-control").style.display = "block";
+        document.getElementById("updateBbox").style.display = "block";
+        document.getElementById("fullExtentBtn").style.display = "block";
+
         // Clear all layers except the bounding box
         landslideLayer.clearLayers();
         floodLayer.clearLayers();
         earthquakeCluster.clearLayers();
         fireLayer.clearLayers();
-        
+
         // Show relevant controls and legend
         if (selected === "Landslide") {
-          document.getElementById("landslide-controls").style.display = 'block';
-          document.getElementById("landslide-legend").style.display = 'block';
+          document.getElementById("landslide-controls").style.display = "block";
+          document.getElementById("landslide-legend").style.display = "block";
         } else if (selected === "Flood") {
-          document.getElementById("flood-controls").style.display = 'block';
-          document.getElementById("flood-legend").style.display = 'block';
+          document.getElementById("flood-controls").style.display = "block";
+          document.getElementById("flood-legend").style.display = "block";
         } else if (selected === "Earthquake") {
-          document.getElementById("earthquake-controls").style.display = 'block';
-          document.getElementById("earthquake-legend").style.display = 'block';
+          document.getElementById("earthquake-controls").style.display =
+            "block";
+          document.getElementById("earthquake-legend").style.display = "block";
         } else if (selected === "Fire") {
-          document.getElementById("fire-controls").style.display = 'block';
-          document.getElementById("fire-legend").style.display = 'block';
+          document.getElementById("fire-controls").style.display = "block";
+          document.getElementById("fire-legend").style.display = "block";
         }
+
+        // Always show boundary legend
+        document.getElementById("boundary-legend").style.display = "block";
       });
 
       // Bounding box update function
@@ -410,35 +567,45 @@
         const west = parseFloat(document.getElementById("west").value);
         const north = parseFloat(document.getElementById("north").value);
         const east = parseFloat(document.getElementById("east").value);
-        
+
         updateBboxRectangle(south, west, north, east);
-        map.fitBounds([[south, west], [north, east]]);
+        map.fitBounds([
+          [south, west],
+          [north, east],
+        ]);
       });
 
       // Full extent button
       document.getElementById("fullExtentBtn").addEventListener("click", () => {
         const selected = document.getElementById("event").value;
         let bounds;
-        
+
         if (selected === "Landslide" && landslideLayer.getLayers().length) {
           bounds = landslideLayer.getBounds();
         } else if (selected === "Flood" && floodLayer.getLayers().length) {
           bounds = floodLayer.getBounds();
-        } else if (selected === "Earthquake" && earthquakeCluster.getLayers().length) {
+        } else if (
+          selected === "Earthquake" &&
+          earthquakeCluster.getLayers().length
+        ) {
           bounds = earthquakeCluster.getBounds();
         } else if (selected === "Fire" && fireLayer.getLayers().length) {
           bounds = fireLayer.getBounds();
         }
-        
+
         if (bounds) {
           map.fitBounds(bounds);
         } else {
-          document.getElementById("message").innerHTML = `<span style='color: yellow'>No data loaded to zoom to.</span>`;
+          document.getElementById(
+            "message"
+          ).innerHTML = `<span style='color: yellow'>No data loaded to zoom to.</span>`;
         }
       });
 
       // Landslide functions
-      document.getElementById("loadLandslideData").addEventListener("click", loadLandslideData);
+      document
+        .getElementById("loadLandslideData")
+        .addEventListener("click", loadLandslideData);
 
       function loadLandslideData() {
         landslideLayer.clearLayers();
@@ -447,48 +614,70 @@
         const north = document.getElementById("north").value;
         const east = document.getElementById("east").value;
         const bbox = `${south},${west},${north},${east}`;
-        
+
         const query = `[out:json];(way["landslide"="yes"](${bbox});relation["landslide"="yes"](${bbox});way["hazard"="landslide"](${bbox});relation["hazard"="landslide"](${bbox});way["natural"="landslide"](${bbox});relation["natural"="landslide"](${bbox}););out body;>;out skel qt;`;
-        
-        fetch("https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query))
-          .then(res => res.json())
-          .then(data => {
+
+        fetch(
+          "https://overpass-api.de/api/interpreter?data=" +
+            encodeURIComponent(query)
+        )
+          .then((res) => res.json())
+          .then((data) => {
             const nodes = new Map();
-            data.elements.forEach(el => el.type === "node" && nodes.set(el.id, el));
-            
-            data.elements.filter(el => el.type === "way").forEach(way => {
-              const coords = way.nodes.map(n => nodes.get(n)).filter(Boolean).map(n => [n.lat, n.lon]);
-              if (coords.length > 1) {
-                const isClosed = coords[0][0] === coords[coords.length-1][0] && coords[0][1] === coords[coords.length-1][1];
-                
-                let color = "#8B4513";
-                if (way.tags) {
-                  if (way.tags.hazard === "landslide") color = "#A0522D";
-                  if (way.tags.natural === "landslide") color = "#CD853F";
+            data.elements.forEach(
+              (el) => el.type === "node" && nodes.set(el.id, el)
+            );
+
+            data.elements
+              .filter((el) => el.type === "way")
+              .forEach((way) => {
+                const coords = way.nodes
+                  .map((n) => nodes.get(n))
+                  .filter(Boolean)
+                  .map((n) => [n.lat, n.lon]);
+                if (coords.length > 1) {
+                  const isClosed =
+                    coords[0][0] === coords[coords.length - 1][0] &&
+                    coords[0][1] === coords[coords.length - 1][1];
+
+                  let color = "#8B4513";
+                  if (way.tags) {
+                    if (way.tags.hazard === "landslide") color = "#A0522D";
+                    if (way.tags.natural === "landslide") color = "#CD853F";
+                  }
+
+                  const marker = isClosed
+                    ? L.polygon(coords, { color: color, fillOpacity: 0.5 })
+                    : L.polyline(coords, { color: color, weight: 3 });
+
+                  marker.bindPopup("Landslide Area").addTo(landslideLayer);
                 }
-                
-                const marker = isClosed ? 
-                  L.polygon(coords, {color: color, fillOpacity: 0.5}) :
-                  L.polyline(coords, {color: color, weight: 3});
-                
-                marker.bindPopup("Landslide Area").addTo(landslideLayer);
-              }
-            });
-            
+              });
+
             if (landslideLayer.getLayers().length) {
               map.fitBounds(landslideLayer.getBounds());
-              document.getElementById("message").innerHTML = `<span style='color: white'>Loaded ${landslideLayer.getLayers().length} landslide areas</span>`;
+              document.getElementById(
+                "message"
+              ).innerHTML = `<span style='color: white'>Loaded ${
+                landslideLayer.getLayers().length
+              } landslide areas</span>`;
             } else {
-              document.getElementById("message").innerHTML = `<span style='color: yellow'>No landslide data found for this area.</span>`;
+              document.getElementById(
+                "message"
+              ).innerHTML = `<span style='color: yellow'>No landslide data found for this area.</span>`;
             }
           })
-          .catch(error => {
-            document.getElementById("message").innerHTML = `<span style='color: yellow'>Error loading landslide data: ${error.message}</span>`;
+          .catch((error) => {
+            document.getElementById(
+              "message"
+            ).innerHTML = `<span style='color: yellow'>Error loading landslide data: ${error.message}</span>`;
           });
       }
 
       // Flood functions
-      document.getElementById("loadFloodData").addEventListener("click", loadFloodData);
+      document
+        .getElementById("loadFloodData")
+        .addEventListener("click", loadFloodData);
 
       function loadFloodData() {
         floodLayer.clearLayers();
@@ -497,45 +686,68 @@
         const north = document.getElementById("north").value;
         const east = document.getElementById("east").value;
         const bbox = `${south},${west},${north},${east}`;
-        
+
         const query = `[out:json];(way["flood_prone"="yes"](${bbox});relation["flood_prone"="yes"](${bbox});way["hazard"="flooding"](${bbox});relation["hazard"="flooding"](${bbox}););out body;>;out skel qt;`;
-        
-        fetch("https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query))
-          .then(res => res.json())
-          .then(data => {
+
+        fetch(
+          "https://overpass-api.de/api/interpreter?data=" +
+            encodeURIComponent(query)
+        )
+          .then((res) => res.json())
+          .then((data) => {
             const nodes = new Map();
-            data.elements.forEach(el => el.type === "node" && nodes.set(el.id, el));
-            
-            data.elements.filter(el => el.type === "way").forEach(way => {
-              const coords = way.nodes.map(n => nodes.get(n)).filter(Boolean).map(n => [n.lat, n.lon]);
-              if (coords.length > 1) {
-                const isClosed = coords[0][0] === coords[coords.length-1][0] && coords[0][1] === coords[coords.length-1][1];
-                
-                let color = "#1f78b4";
-                if (way.tags && way.tags.hazard === "flooding") color = "#e31a1c";
-                
-                const marker = isClosed ? 
-                  L.polygon(coords, {color: color, fillOpacity: 0.5}) :
-                  L.polyline(coords, {color: color, weight: 3});
-                
-                marker.bindPopup("Flood Area").addTo(floodLayer);
-              }
-            });
-            
+            data.elements.forEach(
+              (el) => el.type === "node" && nodes.set(el.id, el)
+            );
+
+            data.elements
+              .filter((el) => el.type === "way")
+              .forEach((way) => {
+                const coords = way.nodes
+                  .map((n) => nodes.get(n))
+                  .filter(Boolean)
+                  .map((n) => [n.lat, n.lon]);
+                if (coords.length > 1) {
+                  const isClosed =
+                    coords[0][0] === coords[coords.length - 1][0] &&
+                    coords[0][1] === coords[coords.length - 1][1];
+
+                  let color = "#1f78b4";
+                  if (way.tags && way.tags.hazard === "flooding")
+                    color = "#e31a1c";
+
+                  const marker = isClosed
+                    ? L.polygon(coords, { color: color, fillOpacity: 0.5 })
+                    : L.polyline(coords, { color: color, weight: 3 });
+
+                  marker.bindPopup("Flood Area").addTo(floodLayer);
+                }
+              });
+
             if (floodLayer.getLayers().length) {
               map.fitBounds(floodLayer.getBounds());
-              document.getElementById("message").innerHTML = `<span style='color: white'>Loaded ${floodLayer.getLayers().length} flood areas</span>`;
+              document.getElementById(
+                "message"
+              ).innerHTML = `<span style='color: white'>Loaded ${
+                floodLayer.getLayers().length
+              } flood areas</span>`;
             } else {
-              document.getElementById("message").innerHTML = `<span style='color: yellow'>No flood data found for this area.</span>`;
+              document.getElementById(
+                "message"
+              ).innerHTML = `<span style='color: yellow'>No flood data found for this area.</span>`;
             }
           })
-          .catch(error => {
-            document.getElementById("message").innerHTML = `<span style='color: yellow'>Error loading flood data: ${error.message}</span>`;
+          .catch((error) => {
+            document.getElementById(
+              "message"
+            ).innerHTML = `<span style='color: yellow'>Error loading flood data: ${error.message}</span>`;
           });
       }
 
       // Earthquake functions
-      document.getElementById("loadEarthquakeData").addEventListener("click", loadEarthquakeData);
+      document
+        .getElementById("loadEarthquakeData")
+        .addEventListener("click", loadEarthquakeData);
 
       function loadEarthquakeData() {
         earthquakeCluster.clearLayers();
@@ -544,18 +756,20 @@
         const north = document.getElementById("north").value;
         const west = document.getElementById("west").value;
         const east = document.getElementById("east").value;
-        
-        fetch(`https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2025-01-01&minmagnitude=${minMagnitude}&minlatitude=${south}&maxlatitude=${north}&minlongitude=${west}&maxlongitude=${east}`)
-          .then(res => res.json())
-          .then(data => {
-            data.features.forEach(eq => {
+
+        fetch(
+          `https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2025-01-01&minmagnitude=${minMagnitude}&minlatitude=${south}&maxlatitude=${north}&minlongitude=${west}&maxlongitude=${east}`
+        )
+          .then((res) => res.json())
+          .then((data) => {
+            data.features.forEach((eq) => {
               const [lon, lat] = eq.geometry.coordinates;
               const { mag, place, time, url } = eq.properties;
-              
+
               let color = "#e31a1c";
               if (mag < 4) color = "#ffeb3b";
               else if (mag < 6) color = "#ff9800";
-              
+
               const marker = L.circleMarker([lat, lon], {
                 radius: mag * 2,
                 fillColor: color,
@@ -572,21 +786,31 @@
               `);
               earthquakeCluster.addLayer(marker);
             });
-            
+
             if (earthquakeCluster.getLayers().length) {
               map.fitBounds(earthquakeCluster.getBounds());
-              document.getElementById("message").innerHTML = `<span style='color: white'>Loaded ${earthquakeCluster.getLayers().length} earthquakes</span>`;
+              document.getElementById(
+                "message"
+              ).innerHTML = `<span style='color: white'>Loaded ${
+                earthquakeCluster.getLayers().length
+              } earthquakes</span>`;
             } else {
-              document.getElementById("message").innerHTML = `<span style='color: yellow'>No earthquake data found.</span>`;
+              document.getElementById(
+                "message"
+              ).innerHTML = `<span style='color: yellow'>No earthquake data found.</span>`;
             }
           })
-          .catch(error => {
-            document.getElementById("message").innerHTML = `<span style='color: yellow'>Error loading earthquake data: ${error.message}</span>`;
+          .catch((error) => {
+            document.getElementById(
+              "message"
+            ).innerHTML = `<span style='color: yellow'>Error loading earthquake data: ${error.message}</span>`;
           });
       }
 
       // Fire functions
-      document.getElementById("loadFireData").addEventListener("click", loadFireData);
+      document
+        .getElementById("loadFireData")
+        .addEventListener("click", loadFireData);
 
       function loadFireData() {
         fireLayer.clearLayers();
@@ -594,39 +818,39 @@
         const north = document.getElementById("north").value;
         const west = document.getElementById("west").value;
         const east = document.getElementById("east").value;
-        
+
         // Get current date in YYYY-MM-DD format
         const today = new Date();
-        const dateString = today.toISOString().split('T')[0];
-        
+        const dateString = today.toISOString().split("T")[0];
+
         // FIRMS API URL for VIIRS SNPP NRT data
         const apiKey = "efcbcbca9e86adfc26d943b9bd52ad6f"; // Replace with your actual API key
         const source = "VIIRS_SNPP_NRT";
         const area = "world";
         const days = "1"; // Last 1 day
-        
+
         const fireURL = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${apiKey}/${source}/${area}/${days}/${dateString}`;
-        
+
         fetch(fireURL)
-          .then(response => {
+          .then((response) => {
             if (!response.ok) {
               throw new Error(`HTTP error! status: ${response.status}`);
             }
             return response.text();
           })
-          .then(text => {
+          .then((text) => {
             const lines = text.trim().split("\n").slice(1); // Skip header
             let fireCount = 0;
-            
-            lines.forEach(row => {
+
+            lines.forEach((row) => {
               const cols = row.split(",");
               const lat = parseFloat(cols[0]);
               const lon = parseFloat(cols[1]);
-              
+
               // Check if within bounding box
               if (lat >= south && lat <= north && lon >= west && lon <= east) {
                 fireCount++;
-                
+
                 const marker = L.circleMarker([lat, lon], {
                   radius: 5,
                   fillColor: "#ff6600",
@@ -635,31 +859,40 @@
                   fillOpacity: 0.8,
                 });
 
-                marker.bindPopup(`
+                marker
+                  .bindPopup(
+                    `
                   <strong>Fire Hotspot</strong><br>
                   <b>Date:</b> ${cols[5]}<br>
                   <b>Time:</b> ${cols[6]}<br>
                   <b>Location:</b> ${lat.toFixed(2)}, ${lon.toFixed(2)}
-                `).addTo(fireLayer);
+                `
+                  )
+                  .addTo(fireLayer);
               }
             });
-            
+
             if (fireCount > 0) {
               map.fitBounds(fireLayer.getBounds());
-              document.getElementById("message").innerHTML = `<span style='color: white'>Loaded ${fireCount} fire hotspots</span>`;
+              document.getElementById(
+                "message"
+              ).innerHTML = `<span style='color: white'>Loaded ${fireCount} fire hotspots</span>`;
             } else {
-              document.getElementById("message").innerHTML = `<span style='color: yellow'>No fire data found in this area.</span>`;
+              document.getElementById(
+                "message"
+              ).innerHTML = `<span style='color: yellow'>No fire data found in this area.</span>`;
             }
           })
-          .catch(error => {
+          .catch((error) => {
             console.error("Error loading fire data:", error);
-            document.getElementById("message").innerHTML = `<span style='color: yellow'>Error loading fire data: ${error.message}</span>`;
+            document.getElementById(
+              "message"
+            ).innerHTML = `<span style='color: yellow'>Error loading fire data: ${error.message}</span>`;
           });
       }
 
-     
       // Initialize the bounding box when page loads
-      window.addEventListener('load', initializeBbox);
+      window.addEventListener("load", initializeBbox);
     </script>
-</body>
+  </body>
 </html>
