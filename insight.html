@@ -278,7 +278,7 @@
         const dateString = today.toISOString().split('T')[0];
         
         // FIRMS API URL for VIIRS SNPP NRT data
-        const apiKey = "efcbcbca9e86adfc26d943b9bd52ad6f"; // Replace with your actual API key
+        const apiKey = "efcbcbca9e86adfc26d943b9bd52ad6f"; // actual API key efcbcbca9e86adfc26d943b9bd52ad6f
         const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${apiKey}/VIIRS_SNPP_NRT/world/1/${dateString}`;
         
         const response = await fetch(url);
