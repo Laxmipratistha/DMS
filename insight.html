@@ -359,52 +359,58 @@
         const data = Object.values(stats);
         const backgroundColors = labels.map(label => chartColors[label]);
         
-        if (barChart) {
-          barChart.data.labels = labels;
-          barChart.data.datasets[0].data = data;
-          barChart.data.datasets[0].backgroundColor = backgroundColors;
-          barChart.update();
-        } else {
-          barChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-              labels: labels,
-              datasets: [{
-                label: 'Number of Occurrences',
-                data: data,
-                backgroundColor: backgroundColors,
-                borderWidth: 1
-              }]
-            },
-            options: {
-              responsive: true,
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  title: {
-                    display: true,
-                    text: 'Number of Events'
-                  }
-                },
-                x: {
-                  title: {
-                    display: true,
-                    text: 'Disaster Type'
-                  }
-                }
-              },
-              plugins: {
-                title: {
-                  display: true,
-                  text: 'Disaster Occurrence Comparison',
-                  font: {
-                    size: 16
-                  }
-                }
-              }
-            }
-          });
+    if (barChart) {
+  barChart.data.labels = labels;
+  barChart.data.datasets[0].data = data;
+  barChart.data.datasets[0].backgroundColor = backgroundColors;
+  barChart.update();
+} else {
+  barChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Occurrences',
+        data: data,
+        backgroundColor: backgroundColors,
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          display: true,  // keeps the axis line
+          ticks: {
+            display: false  // hides the numbers
+          },
+          grid: {
+            display: false  // hides the grid lines
+          },
+          title: {
+            display: false
+          }
+        },
+        x: {
+          title: {
+            display: true,
+            text: 'Disaster Type'
+          }
         }
+      },
+      plugins: {
+        title: {
+          display: true,
+          text: 'Disaster Occurrence Comparison',
+          font: {
+            size: 16
+          }
+        }
+      }
+    }
+  });
+}
       }
     </script>
 </body>
